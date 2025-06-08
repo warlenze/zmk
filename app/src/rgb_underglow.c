@@ -49,6 +49,7 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_BREATHE,
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
+    UNDERGLOW_EFFECT_VERTICALGRAD,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
 
@@ -175,6 +176,21 @@ static void zmk_rgb_underglow_effect_swirl(void) {
     state.animation_step = state.animation_step % HUE_MAX;
 }
 
+static void zmk_rgb_underglow_effect_verticalgrad(void) {
+    uint8_t range = HUE_MAX / 6;
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        struct zmk_led_hsb hsb = state.color;
+        //hsb.h = (HUE_MAX / STRIP_NUM_PIXELS * i + state.animation_step) % HUE_MAX;
+        hsb.h = (hsb.h + range / STRIP_NUM_PIXELS * i /*+ state.animation_step*/) % range;
+
+        pixels[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
+    }
+
+    //state.animation_step += state.animation_speed * 2;
+    //state.animation_step = state.animation_step % HUE_MAX;
+}
+
+
 static void zmk_rgb_underglow_tick(struct k_work *work) {
     switch (state.current_effect) {
     case UNDERGLOW_EFFECT_SOLID:
@@ -188,6 +204,9 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
         break;
     case UNDERGLOW_EFFECT_SWIRL:
         zmk_rgb_underglow_effect_swirl();
+        break;
+    case UNDERGLOW_EFFECT_VERTICALGRAD:
+        zmk_rgb_underglow_effect_verticalgrad();
         break;
     }
 
